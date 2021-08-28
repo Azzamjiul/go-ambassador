@@ -16,8 +16,7 @@ func main() {
 
 		for j := 0; j < rand.Intn(5)+1; j++ {
 			price := float64(rand.Intn(90) + 10)
-			quantity := uint(rand.Intn(5))
-
+			quantity := uint(rand.Intn(5) + 1)
 			orderItems = append(orderItems, models.OrderItem{
 				ProductTitle:      faker.Word(),
 				Price:             price,

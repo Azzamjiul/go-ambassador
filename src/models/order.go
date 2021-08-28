@@ -28,3 +28,15 @@ type OrderItem struct {
 	AdminRevenue      float64 `json:"admin_revenue"`
 	AmbassadorRevenue float64 `json:"ambassador_revenue"`
 }
+
+func (order *Order) FullName() string {
+	return order.FirstName + " " + order.LastName
+}
+
+func (order *Order) GetTotal() float64 {
+	var total float64 = 0
+	for _, orderItem := range order.OrderItems {
+		total += orderItem.Price * float64(orderItem.Quantity)
+	}
+	return total
+}
