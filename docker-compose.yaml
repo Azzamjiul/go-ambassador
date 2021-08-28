@@ -13,7 +13,7 @@ services:
     image: mysql:5.7.22
     restart: always
     environment: 
-      MYSQL_HOST: host.docker.internal
+      # MYSQL_HOST: host.docker.internal
       MYSQL_DATABASE: ambassador
       MYSQL_USER: root
       MYSQL_PASSWORD: root
