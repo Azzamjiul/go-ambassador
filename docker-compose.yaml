@@ -1,5 +1,5 @@
 version: '3.9'
-services: 
+services:
   backend:
     build: .
     ports: 
@@ -13,6 +13,7 @@ services:
     image: mysql:5.7.22
     restart: always
     environment: 
+      MYSQL_HOST: host.docker.internal
       MYSQL_DATABASE: ambassador
       MYSQL_USER: root
       MYSQL_PASSWORD: root
@@ -20,4 +21,4 @@ services:
     volumes: 
       - .dbdata:/var/lib/mysql
     ports: 
-      - 33066:3306
+      - 33066:3306 
