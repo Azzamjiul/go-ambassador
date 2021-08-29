@@ -5,6 +5,7 @@ import (
 	"ambassador/src/models"
 	"context"
 	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -105,6 +106,19 @@ func ProductsBackend(c *fiber.Ctx) error {
 		}
 	} else {
 		searchedProdcuts = products
+	}
+
+	if sortParam := c.Query("sort"); sortParam != "" {
+		sortLower := strings.ToLower(sortParam)
+		if sortLower == "asc" {
+			sort.Slice(searchedProdcuts, func(i, j int) bool {
+				return searchedProdcuts[i].Price < searchedProdcuts[j].Price
+			})
+		} else if sortLower == "desc" {
+			sort.Slice(searchedProdcuts, func(i, j int) bool {
+				return searchedProdcuts[i].Price > searchedProdcuts[j].Price
+			})
+		}
 	}
 
 	return c.JSON(searchedProdcuts)
