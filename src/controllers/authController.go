@@ -4,12 +4,10 @@ import (
 	"ambassador/src/database"
 	"ambassador/src/middlewares"
 	"ambassador/src/models"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
 )
 
 func Register(c *fiber.Ctx) error {
@@ -64,12 +62,22 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	payload := jwt.StandardClaims{
-		Subject:   strconv.Itoa(int(user.Id)),
-		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+	isAmbassador := strings.Contains(c.Path(), "/api/ambassador")
+	var scope string
+	if isAmbassador {
+		scope = "ambassador"
+	} else {
+		scope = "admin"
 	}
 
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS512, payload).SignedString([]byte("secret"))
+	if !isAmbassador && user.IsAmbassador {
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "Unauthorized",
+		})
+	}
+
+	token, err := middlewares.GenerateJWT(user.Id, scope)
 
 	if err != nil {
 		c.Status(fiber.StatusBadRequest)
