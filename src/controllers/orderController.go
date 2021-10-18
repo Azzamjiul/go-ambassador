@@ -5,6 +5,8 @@ import (
 	"ambassador/src/models"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/checkout/session"
 )
 
 func Orders(c *fiber.Ctx) error {
@@ -72,6 +74,8 @@ func CreateOrder(c *fiber.Ctx) error {
 		})
 	}
 
+	var lineItems []*stripe.CheckoutSessionLineItemParams
+
 	for _, requestProduct := range request.Products {
 		product := models.Product{}
 		product.Id = uint(requestProduct["product_id"])
@@ -95,9 +99,45 @@ func CreateOrder(c *fiber.Ctx) error {
 				"message": err.Error(),
 			})
 		}
+
+		lineItems = append(lineItems, &stripe.CheckoutSessionLineItemParams{
+			Name:        stripe.String(product.Title),
+			Description: stripe.String(product.Description),
+			Images:      []*string{stripe.String(product.Image)},
+			Amount:      stripe.Int64(100 * int64(product.Price)),
+			Currency:    stripe.String("usd"),
+			Quantity:    stripe.Int64(int64(requestProduct["quantity"])),
+		})
+	}
+
+	params := stripe.CheckoutSessionParams{
+		SuccessURL:         stripe.String("http://localhost:5000/success?source={CHECKOUT_SESSION_ID}"),
+		CancelURL:          stripe.String("http://localhost:5000/error"),
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+		LineItems:          lineItems,
+	}
+
+	source, err := session.New(&params)
+
+	if err != nil {
+		tx.Rollback()
+		c.Status(fiber.StatusBadRequest)
+		return c.JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	order.TransactionId = source.ID
+
+	if err := tx.Save(&order).Error; err != nil {
+		tx.Rollback()
+		c.Status(fiber.StatusBadRequest)
+		return c.JSON(fiber.Map{
+			"message": err.Error(),
+		})
 	}
 
 	tx.Commit()
 
-	return c.JSON(order)
+	return c.JSON(source)
 }
