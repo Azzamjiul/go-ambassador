@@ -110,6 +110,8 @@ func CreateOrder(c *fiber.Ctx) error {
 		})
 	}
 
+	stripe.Key = "stripe key"
+
 	params := stripe.CheckoutSessionParams{
 		SuccessURL:         stripe.String("http://localhost:5000/success?source={CHECKOUT_SESSION_ID}"),
 		CancelURL:          stripe.String("http://localhost:5000/error"),
